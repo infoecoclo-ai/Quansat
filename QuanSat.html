@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quan Sát">
+<meta name="theme-color" content="#0a0a0b">
+<meta name="format-detection" content="telephone=no">
+<meta name="google" content="notranslate">
+<title>Quan Sát — Nhật Ký Bản Thân</title>
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --surface: #151517;
+    --surface-2: #1d1d20;
+    --line: #2a2a2e;
+    --text: #f5f5f5;
+    --text-dim: #9a9aa0;
+    --purple: #8b5cf6;
+    --purple-dim: #6d28d9;
+    --purple-glow: rgba(139,92,246,0.35);
+    --danger: #ef4444;
+    --radius: 16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; background:var(--bg); }
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+    min-height:100vh;
+    min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  button{ -webkit-appearance:none; appearance:none; touch-action:manipulation; }
+  input,textarea{ -webkit-appearance:none; appearance:none; touch-action:manipulation; }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-left:env(safe-area-inset-left,0px);
+    padding-right:env(safe-area-inset-right,0px);
+    padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));
+  }
+  .screen{ display:none; padding:20px 20px 20px; animation:fadein .25s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){
+    .screen{ animation:none; }
+    .breathe{ animation:none !important; }
+  }
+
+  /* ---------- Home ---------- */
+  .home-header{ text-align:center; margin-bottom:36px; padding-top:12px; }
+  .breathe-wrap{ position:relative; width:120px; height:120px; margin:0 auto 18px; display:flex; align-items:center; justify-content:center; }
+  .breathe{
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle, var(--purple-glow) 0%, transparent 70%);
+    animation:breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{ transform:scale(0.85); opacity:0.5; }
+    50%{ transform:scale(1.15); opacity:1; }
+  }
+  .breathe-core{
+    position:relative; width:14px; height:14px; border-radius:50%;
+    background:var(--purple); box-shadow:0 0 24px 4px var(--purple-glow);
+  }
+  h1.title{ font-size:26px; font-weight:700; margin:0 0 4px; letter-spacing:0.3px; }
+  p.subtitle{ color:var(--text-dim); font-size:14px; margin:0; }
+
+  .topic-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .topic-btn{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px 12px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:16px;
+    font-weight:700;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .12s ease, background .15s ease, border-color .15s ease;
+  }
+  @media (hover:hover){ .topic-btn:hover{ background:var(--surface-2); border-color:var(--purple-dim); } }
+  .topic-btn:active{ transform:scale(0.97); }
+  .topic-btn:focus-visible{ outline:2px solid var(--purple); outline-offset:2px; }
+  .topic-btn .emoji{ display:block; font-size:26px; margin-bottom:8px; }
+
+  /* ---------- Sub / generic screen ---------- */
+  .breadcrumb{ color:var(--text-dim); font-size:13px; margin-bottom:6px; }
+  .breadcrumb b{ color:var(--purple); }
+  h2.screen-title{ font-size:22px; font-weight:700; margin:0 0 22px; }
+
+  .sub-list{ display:flex; flex-direction:column; gap:12px; }
+  .sub-btn{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 16px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:16px;
+    font-weight:700;
+    text-align:left;
+    cursor:pointer;
+    display:flex; justify-content:space-between; align-items:center;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .sub-btn:hover{ background:var(--surface-2); border-color:var(--purple-dim); }
+  .sub-btn:focus-visible{ outline:2px solid var(--purple); outline-offset:2px; }
+  .sub-btn .arrow{ color:var(--purple); font-weight:400; }
+
+  .back-link{
+    background:none; border:none; color:var(--text-dim); font-family:inherit;
+    font-size:14px; cursor:pointer; padding:10px 0 16px; min-height:44px; display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-link:hover{ color:var(--text); }
+
+  /* ---------- Entry form ---------- */
+  textarea#entryContent{
+    width:100%; min-height:160px; background:var(--surface);
+    border:1px solid var(--line); border-radius:12px; color:var(--text);
+    font-family:inherit; font-size:16px; padding:14px; resize:vertical;
+  }
+  textarea#entryContent:focus-visible{ outline:2px solid var(--purple); border-color:var(--purple); }
+  .field-label{ font-size:13px; color:var(--text-dim); margin-bottom:8px; font-weight:700; }
+
+  .btn-primary{
+    width:100%; background:var(--purple); border:none; border-radius:12px;
+    color:#fff; font-family:inherit; font-weight:700; font-size:16px;
+    padding:16px; cursor:pointer; margin-top:16px; transition:background .15s ease;
+  }
+  .btn-primary:hover{ background:var(--purple-dim); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-primary:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+
+  .btn-secondary{
+    width:100%; background:transparent; border:1px solid var(--line); border-radius:12px;
+    color:var(--text-dim); font-family:inherit; font-weight:700; font-size:14px;
+    padding:12px; cursor:pointer; margin-top:10px;
+  }
+  .btn-secondary:hover{ border-color:var(--purple-dim); color:var(--text); }
+
+  .status-line{ font-size:13px; color:var(--text-dim); margin-top:10px; min-height:18px; text-align:center; }
+  .status-line.ok{ color:#34d399; }
+  .status-line.err{ color:var(--danger); }
+
+  /* ---------- Journal ---------- */
+  .journal-filters{ display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-bottom:18px; scrollbar-width:none; }
+  .journal-filters::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex:0 0 auto; background:var(--surface); border:1px solid var(--line); color:var(--text-dim);
+    font-family:inherit; font-size:13px; font-weight:700; padding:10px 14px; border-radius:999px; cursor:pointer;
+  }
+  .chip.active{ background:var(--purple); border-color:var(--purple); color:#fff; }
+
+  .entry-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; margin-bottom:12px;
+  }
+  .entry-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px; }
+  .entry-tags{ font-size:12px; color:var(--purple); font-weight:700; }
+  .entry-time{ font-size:12px; color:var(--text-dim); white-space:nowrap; }
+  .entry-content{ font-size:14.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; margin-bottom:10px; }
+  .entry-actions{ display:flex; gap:10px; }
+  .entry-actions button{
+    background:none; border:none; color:var(--text-dim); font-family:inherit;
+    font-size:13px; font-weight:700; cursor:pointer; padding:10px 8px 10px 0;
+  }
+  .entry-actions button:hover{ color:var(--purple); }
+  .entry-actions button.danger:hover{ color:var(--danger); }
+  .empty-state{ text-align:center; color:var(--text-dim); font-size:14px; padding:60px 20px; }
+
+  .edit-box textarea{
+    width:100%; min-height:90px; background:var(--surface-2); border:1px solid var(--purple-dim);
+    border-radius:8px; color:var(--text); font-family:inherit; font-size:16px; padding:10px; margin-bottom:8px;
+  }
+  .edit-actions{ display:flex; gap:8px; }
+  .edit-actions button{
+    flex:1; border:none; border-radius:8px; padding:12px 8px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .edit-actions .save{ background:var(--purple); color:#fff; }
+  .edit-actions .cancel{ background:var(--surface-2); color:var(--text-dim); }
+
+  /* ---------- Settings ---------- */
+  .settings-group{ margin-bottom:24px; }
+  label.set-label{ display:block; font-size:13px; font-weight:700; color:var(--text-dim); margin-bottom:8px; }
+  input#sheetUrl{
+    width:100%; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    color:var(--text); font-family:inherit; font-size:16px; padding:12px; margin-bottom:10px;
+  }
+  input#sheetUrl:focus-visible{ outline:2px solid var(--purple); }
+  .info-box{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px;
+    font-size:13px; line-height:1.7; color:var(--text-dim); margin-bottom:16px;
+  }
+  .info-box b{ color:var(--text); }
+  .info-box ol{ margin:8px 0 0; padding-left:20px; }
+  .info-box code{ background:var(--surface-2); padding:1px 6px; border-radius:4px; color:var(--purple); font-size:12px; }
+
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px; background:var(--surface);
+    border-top:1px solid var(--line); display:flex; z-index:10;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .nav-btn{
+    flex:1; background:none; border:none; color:var(--text-dim); font-family:inherit;
+    font-size:12px; font-weight:700; padding:10px 4px 8px; min-height:50px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .nav-btn .nav-icon{ font-size:18px; line-height:1; }
+  .nav-btn.active{ color:var(--purple); }
+  .nav-btn:focus-visible{ outline:2px solid var(--purple); outline-offset:-2px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="home-header">
+      <div class="breathe-wrap">
+        <div class="breathe"></div>
+        <div class="breathe-core"></div>
+      </div>
+      <h1 class="title">Quan Sát</h1>
+      <p class="subtitle">Chọn một chủ đề để bắt đầu ghi lại</p>
+    </div>
+    <div class="topic-grid" id="topicGrid"></div>
+  </div>
+
+  <!-- SUBCATEGORY -->
+  <div class="screen" id="screen-sub">
+    <button class="back-link" data-back="home">← Trang chủ</button>
+    <div class="breadcrumb"><b id="subBreadTopic"></b></div>
+    <h2 class="screen-title">Chọn tiêu mục con</h2>
+    <div class="sub-list" id="subList"></div>
+  </div>
+
+  <!-- ENTRY -->
+  <div class="screen" id="screen-entry">
+    <button class="back-link" data-back="sub">← Quay lại</button>
+    <div class="breadcrumb"><b id="entryBreadTopic"></b> · <span id="entryBreadSub"></span></div>
+    <h2 class="screen-title">Ghi lại quan sát</h2>
+    <div class="field-label">Nội dung</div>
+    <textarea id="entryContent" placeholder="Viết những gì bạn quan sát được ngay lúc này…"></textarea>
+    <button class="btn-primary" id="saveEntryBtn">Lưu lại</button>
+    <button class="btn-secondary" data-back="home">Huỷ</button>
+    <div class="status-line" id="entryStatus"></div>
+  </div>
+
+  <!-- JOURNAL -->
+  <div class="screen" id="screen-journal">
+    <h2 class="screen-title">Nhật ký</h2>
+    <button class="btn-secondary" id="journalRefreshBtn" style="margin-top:0; margin-bottom:6px;">↻ Làm mới từ Google Sheet</button>
+    <div class="status-line" id="journalRefreshStatus" style="margin-bottom:14px;"></div>
+    <div class="journal-filters" id="journalFilters"></div>
+    <div id="journalList"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <h2 class="screen-title">Cài đặt</h2>
+    <div class="settings-group">
+      <label class="set-label" for="sheetUrl">Google Apps Script Web App URL</label>
+      <input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      <button class="btn-primary" id="saveUrlBtn" style="margin-top:0;">Lưu URL</button>
+      <div class="status-line" id="settingsStatus"></div>
+    </div>
+    <div class="info-box">
+      <b>Cách kết nối với Google Sheet:</b>
+      <ol>
+        <li>Mở Google Sheet của bạn → <b>Tiện ích mở rộng → Apps Script</b></li>
+        <li>Xoá code mẫu, dán đoạn script được cung cấp riêng (file <code>.gs</code>)</li>
+        <li>Bấm <b>Triển khai → Triển khai mới → Web app</b></li>
+        <li>Chọn quyền truy cập: <b>Bất kỳ ai</b> (Anyone)</li>
+        <li>Bấm <b>Triển khai</b>, cấp quyền, rồi copy URL kết thúc bằng <code>/exec</code></li>
+        <li>Dán URL đó vào ô phía trên và bấm <b>Lưu URL</b></li>
+      </ol>
+    </div>
+    <button class="btn-secondary" id="syncNowBtn">Đồng bộ lại từ Google Sheet</button>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" data-nav="home"><span class="nav-icon">●</span>Trang chủ</button>
+  <button class="nav-btn" data-nav="journal"><span class="nav-icon">▤</span>Nhật ký</button>
+  <button class="nav-btn" data-nav="settings"><span class="nav-icon">⚙</span>Cài đặt</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TOPICS = {
+    ngonngu: { label:"Ngôn Ngữ", emoji:"🗣️", subs:["Bản thân","Người khác"] },
+    camxuc:  { label:"Cảm Xúc",  emoji:"◐",  subs:["Tiêu cực","Tích cực","Unknown"] },
+    camgiac: { label:"Cảm Giác", emoji:"✦",  subs:["Thoải mái","Khó chịu","Unknown"] },
+    ynghi:   { label:"Ý Nghĩ",   emoji:"◇",  subs:["Cá nhân","Xã hội"] }
+  };
+
+  var state = {
+    currentTopic: null,
+    currentSub: null,
+    editingId: null,
+    journalFilter: "all"
+  };
+
+  var STORAGE_KEY = "qsBanThan_entries_v1";
+  var URL_KEY = "qsBanThan_sheetUrl_v1";
+
+  // localStorage có thể bị chặn (Safari riêng tư, trình duyệt trong Zalo/Messenger…)
+  // -> dự phòng bằng bộ nhớ tạm để app không bị đứng.
+  var memStore = {};
+  function lsGet(k){
+    try{ var v = window.localStorage.getItem(k); return v === null ? (memStore[k] || null) : v; }
+    catch(e){ return memStore[k] || null; }
+  }
+  function lsSet(k, v){
+    memStore[k] = v;
+    try{ window.localStorage.setItem(k, v); }catch(e){}
+  }
+  function loadEntries(){
+    try{ var a = JSON.parse(lsGet(STORAGE_KEY)); return Array.isArray(a) ? a : []; }
+    catch(e){ return []; }
+  }
+  function saveEntries(list){ lsSet(STORAGE_KEY, JSON.stringify(list)); }
+  function getSheetUrl(){ return (lsGet(URL_KEY) || "").trim(); }
+  function setSheetUrl(u){ lsSet(URL_KEY, u); }
+
+  function pad(n){ return n<10 ? "0"+n : ""+n; }
+  function nowParts(){
+    var d = new Date();
+    return {
+      date: pad(d.getDate())+"/"+pad(d.getMonth()+1)+"/"+d.getFullYear(),
+      time: pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()),
+      sortKey: d.getTime()
+    };
+  }
+  // Chuyển "dd/mm/yyyy" + "hh:mm:ss" thành mốc thời gian chính xác để sắp xếp.
+  // (Date.parse mặc định hiểu sai định dạng dd/mm/yyyy nên không dùng trực tiếp.)
+  function parseVNDateTime(dateStr, timeStr){
+    try{
+      var dp = String(dateStr).split("/");
+      var tp = String(timeStr).split(":");
+      var day = parseInt(dp[0],10), month = parseInt(dp[1],10)-1, year = parseInt(dp[2],10);
+      var h = parseInt(tp[0]||"0",10), m = parseInt(tp[1]||"0",10), s = parseInt(tp[2]||"0",10);
+      var d = new Date(year, month, day, h, m, s);
+      var t = d.getTime();
+      return isNaN(t) ? Date.now() : t;
+    }catch(e){ return Date.now(); }
+  }
+
+  /* ---------- Navigation ---------- */
+  function showScreen(name){
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    document.getElementById("screen-"+name).classList.add("active");
+    document.querySelectorAll(".nav-btn").forEach(function(b){
+      b.classList.toggle("active", b.dataset.nav === name);
+    });
+    if(name === "journal") renderJournal();
+    window.scrollTo(0,0);
+  }
+
+  // Đồng bộ thủ công khi người dùng bấm nút "Làm mới" —
+  // không tự động chạy mỗi lần chuyển tab để tránh tải lại toàn bộ dữ liệu không cần thiết.
+  function manualRefreshJournal(){
+    var statusEl = document.getElementById("journalRefreshStatus");
+    if(!getSheetUrl()){
+      statusEl.textContent = "Chưa cài URL Apps Script (vào Cài đặt).";
+      statusEl.className = "status-line err";
+      return;
+    }
+    statusEl.textContent = "Đang làm mới…";
+    statusEl.className = "status-line";
+    fetchFromSheet().then(function(remote){
+      if(remote){
+        var mapped = remote.map(function(r){
+          return {
+            id: r.id, topic: r.topic, subtopic: r.subtopic, content: r.content,
+            date: r.date, time: r.time,
+            sortKey: parseVNDateTime(r.date, r.time)
+          };
+        });
+        saveEntries(mapped);
+        renderJournal();
+        statusEl.textContent = "Đã cập nhật ✓";
+        statusEl.className = "status-line ok";
+      } else {
+        statusEl.textContent = "Không tải được. Kiểm tra lại kết nối/URL.";
+        statusEl.className = "status-line err";
+      }
+    });
+  }
+
+  document.querySelectorAll("[data-nav]").forEach(function(btn){
+    btn.addEventListener("click", function(){ showScreen(btn.dataset.nav); });
+  });
+  document.querySelectorAll("[data-back]").forEach(function(btn){
+    btn.addEventListener("click", function(){ showScreen(btn.dataset.back); });
+  });
+
+  /* ---------- Home: build topic buttons ---------- */
+  var topicGrid = document.getElementById("topicGrid");
+  Object.keys(TOPICS).forEach(function(key){
+    var t = TOPICS[key];
+    var b = document.createElement("button");
+    b.className = "topic-btn";
+    b.innerHTML = '<span class="emoji">'+t.emoji+'</span>'+t.label;
+    b.addEventListener("click", function(){ openSub(key); });
+    topicGrid.appendChild(b);
+  });
+
+  function openSub(topicKey){
+    state.currentTopic = topicKey;
+    var t = TOPICS[topicKey];
+    document.getElementById("subBreadTopic").textContent = t.label;
+    var list = document.getElementById("subList");
+    list.innerHTML = "";
+    t.subs.forEach(function(sub){
+      var b = document.createElement("button");
+      b.className = "sub-btn";
+      b.innerHTML = "<span>"+sub+"</span><span class='arrow'>→</span>";
+      b.addEventListener("click", function(){ openEntry(sub); });
+      list.appendChild(b);
+    });
+    showScreen("sub");
+  }
+
+  function openEntry(sub){
+    state.currentSub = sub;
+    var t = TOPICS[state.currentTopic];
+    document.getElementById("entryBreadTopic").textContent = t.label;
+    document.getElementById("entryBreadSub").textContent = sub;
+    document.getElementById("entryContent").value = "";
+    document.getElementById("entryStatus").textContent = "";
+    document.getElementById("entryStatus").className = "status-line";
+    showScreen("entry");
+  }
+
+  /* ---------- Save entry ---------- */
+  document.getElementById("saveEntryBtn").addEventListener("click", function(){
+    var content = document.getElementById("entryContent").value.trim();
+    var statusEl = document.getElementById("entryStatus");
+    if(!content){
+      statusEl.textContent = "Vui lòng nhập nội dung trước khi lưu.";
+      statusEl.className = "status-line err";
+      return;
+    }
+    var np = nowParts();
+    var entry = {
+      id: "e" + np.sortKey + "_" + Math.floor(Math.random()*1000),
+      topic: TOPICS[state.currentTopic].label,
+      subtopic: state.currentSub,
+      content: content,
+      date: np.date,
+      time: np.time,
+      sortKey: np.sortKey
+    };
+    var entries = loadEntries();
+    entries.unshift(entry);
+    saveEntries(entries);
+
+    statusEl.textContent = "Đã lưu. Đang đồng bộ…";
+    statusEl.className = "status-line";
+
+    syncToSheet({ action:"create", id:entry.id, date:entry.date, time:entry.time,
+                  topic:entry.topic, subtopic:entry.subtopic, content:entry.content })
+      .then(function(ok){
+        statusEl.textContent = ok ? "Đã lưu và đồng bộ vào Google Sheet ✓" : "Đã lưu trên máy. Chưa đồng bộ được (kiểm tra Cài đặt).";
+        statusEl.className = ok ? "status-line ok" : "status-line err";
+      });
+
+    setTimeout(function(){ showScreen("home"); }, 700);
+  });
+
+  /* ---------- Sync helper ---------- */
+  function fetchWithTimeout(url, opts, ms){
+    return new Promise(function(resolve, reject){
+      var done = false;
+      var timer = setTimeout(function(){ if(!done){ done = true; reject(new Error("timeout")); } }, ms || 20000);
+      fetch(url, opts).then(function(r){
+        if(!done){ done = true; clearTimeout(timer); resolve(r); }
+      }, function(err){
+        if(!done){ done = true; clearTimeout(timer); reject(err); }
+      });
+    });
+  }
+
+  function syncToSheet(payload){
+    var url = getSheetUrl();
+    if(!url) return Promise.resolve(false);
+    // POST kiểu "simple request" (text/plain) để tránh preflight CORS trên Safari.
+    return fetchWithTimeout(url, {
+      method: "POST",
+      redirect: "follow",
+      credentials: "omit",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.ok; }).catch(function(){ return false; });
+  }
+
+  function fetchFromSheet(){
+    var url = getSheetUrl();
+    if(!url) return Promise.resolve(null);
+    var sep = url.indexOf("?") > -1 ? "&" : "?";
+    return fetchWithTimeout(url + sep + "_=" + Date.now(), { redirect:"follow", credentials:"omit", cache:"no-store" })
+      .then(function(r){ return r.json(); })
+      .then(function(data){ return (data && data.entries) ? data.entries : null; })
+      .catch(function(){ return null; });
+  }
+
+  /* ---------- Journal ---------- */
+  var filterKeys = ["all"].concat(Object.keys(TOPICS));
+  var filterLabels = { all:"Tất cả" };
+  Object.keys(TOPICS).forEach(function(k){ filterLabels[k] = TOPICS[k].label; });
+
+  var filtersEl = document.getElementById("journalFilters");
+  filterKeys.forEach(function(k){
+    var chip = document.createElement("button");
+    chip.className = "chip" + (k==="all" ? " active" : "");
+    chip.textContent = filterLabels[k];
+    chip.addEventListener("click", function(){
+      state.journalFilter = k;
+      document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      renderJournal();
+    });
+    filtersEl.appendChild(chip);
+  });
+
+  function renderJournal(){
+    var listEl = document.getElementById("journalList");
+    var entries = loadEntries().slice().sort(function(a,b){ return b.sortKey - a.sortKey; });
+    if(state.journalFilter !== "all"){
+      var wantedLabel = TOPICS[state.journalFilter].label;
+      entries = entries.filter(function(e){ return e.topic === wantedLabel; });
+    }
+    listEl.innerHTML = "";
+    if(entries.length === 0){
+      if(!getSheetUrl()){
+        listEl.innerHTML = '<div class="empty-state">Chưa kết nối Google Sheet.<br>Vào <b>Cài đặt</b> để dán URL Apps Script, dữ liệu của bạn sẽ hiện lại.</div>';
+      } else {
+        listEl.innerHTML = '<div class="empty-state">Chưa có ghi chú nào ở đây.<br>Quay về trang chủ để bắt đầu quan sát.</div>';
+      }
+      return;
+    }
+    entries.forEach(function(e){ listEl.appendChild(renderEntryCard(e)); });
+  }
+
+  function renderEntryCard(e){
+    var card = document.createElement("div");
+    card.className = "entry-card";
+    card.dataset.id = e.id;
+
+    var top = document.createElement("div");
+    top.className = "entry-top";
+    function esc(x){ return String(x == null ? "" : x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    top.innerHTML = '<span class="entry-tags">'+esc(e.topic)+' · '+esc(e.subtopic)+'</span>'+
+                     '<span class="entry-time">'+esc(e.time)+' — '+esc(e.date)+'</span>';
+    card.appendChild(top);
+
+    var contentEl = document.createElement("div");
+    contentEl.className = "entry-content";
+    contentEl.textContent = e.content;
+    card.appendChild(contentEl);
+
+    var actions = document.createElement("div");
+    actions.className = "entry-actions";
+    actions.innerHTML = '<button data-act="edit">Sửa</button><button data-act="delete" class="danger">Xoá</button>';
+    card.appendChild(actions);
+
+    actions.querySelector('[data-act="edit"]').addEventListener("click", function(){
+      startEdit(card, e);
+    });
+    actions.querySelector('[data-act="delete"]').addEventListener("click", function(){
+      if(confirm("Xoá ghi chú này?")){
+        var entries = loadEntries().filter(function(x){ return x.id !== e.id; });
+        saveEntries(entries);
+        syncToSheet({ action:"delete", id:e.id });
+        renderJournal();
+      }
+    });
+    return card;
+  }
+
+  function startEdit(card, e){
+    var box = document.createElement("div");
+    box.className = "edit-box";
+    box.innerHTML = '<textarea>'+e.content.replace(/</g,"&lt;")+'</textarea>'+
+      '<div class="edit-actions"><button class="save">Lưu</button><button class="cancel">Huỷ</button></div>';
+    card.innerHTML = "";
+    card.appendChild(box);
+    var ta = box.querySelector("textarea");
+    ta.focus();
+
+    box.querySelector(".save").addEventListener("click", function(){
+      var newContent = ta.value.trim();
+      if(!newContent) return;
+      var entries = loadEntries();
+      var idx = entries.findIndex(function(x){ return x.id === e.id; });
+      if(idx > -1){
+        entries[idx].content = newContent;
+        saveEntries(entries);
+        syncToSheet({ action:"update", id:e.id, date:entries[idx].date, time:entries[idx].time,
+                      topic:entries[idx].topic, subtopic:entries[idx].subtopic, content:newContent });
+      }
+      renderJournal();
+    });
+    box.querySelector(".cancel").addEventListener("click", renderJournal);
+  }
+
+  /* ---------- Settings ---------- */
+  document.getElementById("sheetUrl").value = getSheetUrl();
+
+  document.getElementById("saveUrlBtn").addEventListener("click", function(){
+    var val = document.getElementById("sheetUrl").value.trim();
+    var statusEl = document.getElementById("settingsStatus");
+    setSheetUrl(val);
+    statusEl.textContent = "Đã lưu URL.";
+    statusEl.className = "status-line ok";
+  });
+
+  document.getElementById("journalRefreshBtn").addEventListener("click", manualRefreshJournal);
+
+  document.getElementById("syncNowBtn").addEventListener("click", function(){
+    var statusEl = document.getElementById("settingsStatus");
+    statusEl.textContent = "Đang tải dữ liệu từ Google Sheet…";
+    statusEl.className = "status-line";
+    fetchFromSheet().then(function(remote){
+      if(remote){
+        var mapped = remote.map(function(r){
+          return {
+            id: r.id, topic: r.topic, subtopic: r.subtopic, content: r.content,
+            date: r.date, time: r.time,
+            sortKey: parseVNDateTime(r.date, r.time)
+          };
+        });
+        saveEntries(mapped);
+        statusEl.textContent = "Đã đồng bộ " + mapped.length + " ghi chú từ Google Sheet ✓";
+        statusEl.className = "status-line ok";
+        renderJournal();
+      } else {
+        statusEl.textContent = "Không tải được. Kiểm tra lại URL Apps Script.";
+        statusEl.className = "status-line err";
+      }
+    });
+  });
+
+  /* ---------- Initial load: try syncing from sheet silently ---------- */
+  if(getSheetUrl()){
+    fetchFromSheet().then(function(remote){
+      if(remote && remote.length){
+        var mapped = remote.map(function(r){
+          return {
+            id: r.id, topic: r.topic, subtopic: r.subtopic, content: r.content,
+            date: r.date, time: r.time,
+            sortKey: parseVNDateTime(r.date, r.time)
+          };
+        });
+        saveEntries(mapped);
+      }
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
